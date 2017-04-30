@@ -63,18 +63,47 @@ x_train = x_train[1000:,:,:,:]
 '''
 
 y_train = traindata.get('labels')
+
+x_val = np.zeros((1500, 32, 32, 3))
+y_val = np.zeros((1500, 1))
+
+
+label = 0
+val_idx = 0
+train_idx = 0
+remove_list = []
+for train_idx in range(12000):
+    if val_idx >= 500:
+        label = val_idx/500
+    if label >= 3:
+        break
+    if y_train[train_idx] == label: 
+        x_val[val_idx] = x_train[train_idx]
+        y_val[val_idx] = y_train[train_idx]
+        remove_list.append(train_idx)
+        val_idx += 1
+print(len(remove_list))          
+
+x_train = np.delete(x_train, remove_list, 0)
+y_train = np.delete(y_train, remove_list, 0)
+
+
 num_classes = 3
 y_train = np_utils.to_categorical(y_train , num_classes)
+y_val = np_utils.to_categorical(y_val , num_classes)
 '''
 y_val = y_train[0:1000,:]
 y_train = y_train[1000:,:]
 '''
+print(x_train.shape)
+print(y_train.shape)
 
-x_train, x_val, y_train, y_val = train_test_split(x_train, y_train, test_size=0.33, random_state=7)
+#x_train, x_val, y_train, y_val = train_test_split(x_train, y_train, test_size=0.33, random_state=7)
+
+ 
 
 
-
-data_augmentation = True
+data_augmentation = False
 '''
 model = Sequential()
 
@@ -142,6 +171,7 @@ model.compile(loss='categorical_crossentropy', # using the cross-entropy loss fu
 
 
 '''
+'''
 model = Sequential()
 model.add(Conv2D(32, (3, 3), input_shape=(32, 32, 3), activation='relu', padding='same'))
 model.add(Conv2D(32, (3, 3), activation='relu', padding='same'))
@@ -170,12 +200,30 @@ model.compile(loss='categorical_crossentropy',
               #optimizer=sgd,
               optimizer='adam',
               metrics=['accuracy'])
+'''
 
 '''
 x_train = x_train.astype('float32')
 x_val = x_val.astype('float32')
 x_train /= 255
 x_val /= 255'''
+epo = 50
+batch=32
+model = Sequential()
+model.add(Convolution2D(32, 3, 3, input_shape=(32, 32, 3), border_mode='same', activation='relu', W_constraint=maxnorm(3)))
+model.add(Dropout(0.2))
+model.add(Convolution2D(32, 3, 3, activation='relu', border_mode='same', W_constraint=maxnorm(3)))
+model.add(MaxPooling2D(pool_size=(2, 2)))
+model.add(Flatten())
+model.add(Dense(512, activation='relu', W_constraint=maxnorm(3)))
+model.add(Dropout(0.5))
+model.add(Dense(3, activation='softmax'))
+# Compile model
+lrate = 0.01
+decay = lrate/epo
+sgd = SGD(lr=lrate, momentum=0.9, decay=decay, nesterov=False)
+model.compile(loss='categorical_crossentropy', optimizer=sgd, metrics=['accuracy'])
+
 
 if not data_augmentation:
     print('Not using data augmentation.')
