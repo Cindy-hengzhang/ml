@@ -15,7 +15,6 @@ from keras.preprocessing.image import ImageDataGenerator
 import csv
 from keras.constraints import maxnorm
 from keras.utils import np_utils
-from sklearn.model_selection import train_test_split
 
 # trainImage contains .label and .data field
 def plot_model_history(model_history):
