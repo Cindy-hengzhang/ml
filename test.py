@@ -208,26 +208,60 @@ x_val = x_val.astype('float32')
 x_train /= 255
 x_val /= 255'''
 epo = 50
-batch=32
+batch=64
 model = Sequential()
-model.add(Convolution2D(32, 3, 3, input_shape=(32, 32, 3), border_mode='same', activation='relu', W_constraint=maxnorm(3)))
-model.add(Dropout(0.2))
-model.add(Convolution2D(32, 3, 3, activation='relu', border_mode='same', W_constraint=maxnorm(3)))
+
+#1
+model.add(Conv2D(32, 3, 3, activation='relu', input_shape=(32,32,3)))
+model.add(Conv2D(32, 3, 3, activation='relu'))
 model.add(MaxPooling2D(pool_size=(2, 2)))
-model.add(Flatten())
-model.add(Dense(512, activation='relu', W_constraint=maxnorm(3)))
+model.add(Dropout(0.25))
+# model.add(Conv2D(FEATURES_2, 2,2, activation='relu'))
+# model.add(MaxPooling2D(pool_size=(2, 2)))
+
+#model.add(Conv2D(64, 3, 3, activation='relu'))
+#model.add(MaxPooling2D(pool_size=(2, 2)))
+model.add(Dropout(0.25))
+model.add(Flatten())  # this converts our 3D feature maps to 1D feature vectors
+model.add(Dense(128))
+model.add(Activation('relu'))
 model.add(Dropout(0.5))
-model.add(Dense(3, activation='softmax'))
+model.add(Dense(3))
+model.add(Activation('softmax'))
+
+'''
+#2
+model.add(Convolution2D(32, 3, 3, border_mode='same', input_shape=(img_channels, img_rows, img_cols)))
+model.add(Activation('relu'))
+model.add(Convolution2D(32, 3, 3))
+model.add(Activation('relu'))
+model.add(MaxPooling2D(pool_size=(2, 2)))
+model.add(Dropout(0.25))
+
+model.add(Convolution2D(64, 3, 3, border_mode='same'))
+model.add(Activation('relu'))
+model.add(Convolution2D(64, 3, 3))
+model.add(Activation('relu'))
+model.add(MaxPooling2D(pool_size=(2, 2)))
+model.add(Dropout(0.25))
+
+model.add(Flatten())
+model.add(Dense(512))
+model.add(Activation('relu'))
+model.add(Dropout(0.5))
+model.add(Dense(nb_classes))
+model.add(Activation('softmax'))
+'''
 # Compile model
 lrate = 0.01
 decay = lrate/epo
-sgd = SGD(lr=lrate, momentum=0.9, decay=decay, nesterov=False)
+sgd = SGD(lr=lrate, momentum=0.9, decay=1e-6, nesterov=False)
 model.compile(loss='categorical_crossentropy', optimizer=sgd, metrics=['accuracy'])
 
 
 if not data_augmentation:
     print('Not using data augmentation.')
-    model.fit(x_train, y_train,
+    res = model.fit(x_train, y_train,
               batch_size=batch,
               epochs=epo,
               validation_data=(x_val, y_val),
@@ -253,12 +287,11 @@ else:
                         validation_data=(x_val, y_val))
 
 
-print('time elapsed: {0}'.format(time.time() - st))
 y_test = model.predict_classes(x_test, verbose=0)
 print(y_test)
 y_test = np.array(y_test)
 
-with open('out_adam.csv','wb') as myfile:
+with open('out_1.csv','wb') as myfile:
     wr = csv.writer(myfile, quoting=csv.QUOTE_ALL)
     for val in y_test:
         wr.writerow([val])
