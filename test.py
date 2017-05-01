@@ -36,7 +36,8 @@ def plot_model_history(model_history):
     axs[1].set_xlabel('Epoch')
     axs[1].set_xticks(np.arange(1,len(model_history.history['loss'])+1),len(model_history.history['loss'])/10)
     axs[1].legend(['train', 'val'], loc='best')
-    plt.show()
+    plt.draw()
+    plt.savefig('plot')
 
 np.random.seed(7)
 
@@ -209,7 +210,7 @@ x_val /= 255'''
 epo = 50
 batch=64
 model = Sequential()
-
+'''
 #1
 model.add(Conv2D(32, 3, 3, activation='relu', input_shape=(32,32,3)))
 model.add(Conv2D(32, 3, 3, activation='relu'))
@@ -227,10 +228,11 @@ model.add(Activation('relu'))
 model.add(Dropout(0.5))
 model.add(Dense(3))
 model.add(Activation('softmax'))
-
 '''
+
+
 #2
-model.add(Convolution2D(32, 3, 3, border_mode='same', input_shape=(img_channels, img_rows, img_cols)))
+model.add(Convolution2D(32, 3, 3, border_mode='same', input_shape=(32, 32, 3)))
 model.add(Activation('relu'))
 model.add(Convolution2D(32, 3, 3))
 model.add(Activation('relu'))
@@ -250,7 +252,7 @@ model.add(Activation('relu'))
 model.add(Dropout(0.5))
 model.add(Dense(nb_classes))
 model.add(Activation('softmax'))
-'''
+
 # Compile model
 lrate = 0.01
 decay = lrate/epo
