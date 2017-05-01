@@ -104,6 +104,7 @@ print(y_train.shape)
 
 
 data_augmentation = False
+nb_classes = 3
 '''
 model = Sequential()
 
