@@ -15,7 +15,6 @@ from keras.preprocessing.image import ImageDataGenerator
 import csv
 from keras.constraints import maxnorm
 from keras.utils import np_utils
-from sklearn.model_selection import train_test_split
 from keras.layers.advanced_activations import PReLU
 
 # trainImage contains .label and .data field
@@ -38,7 +37,8 @@ def plot_model_history(model_history):
     axs[1].set_xlabel('Epoch')
     axs[1].set_xticks(np.arange(1,len(model_history.history['loss'])+1),len(model_history.history['loss'])/10)
     axs[1].legend(['train', 'val'], loc='best')
-    plt.show()
+    plt.draw()
+    plt.savefig('plot')
 
 np.random.seed(7)
 
@@ -64,18 +64,48 @@ x_train = x_train[1000:,:,:,:]
 '''
 
 y_train = traindata.get('labels')
+
+x_val = np.zeros((1500, 32, 32, 3))
+y_val = np.zeros((1500, 1))
+
+
+label = 0
+val_idx = 0
+train_idx = 0
+remove_list = []
+for train_idx in range(12000):
+    if val_idx >= 500:
+        label = val_idx/500
+    if label >= 3:
+        break
+    if y_train[train_idx] == label:
+        x_val[val_idx] = x_train[train_idx]
+        y_val[val_idx] = y_train[train_idx]
+        remove_list.append(train_idx)
+        val_idx += 1
+print(len(remove_list))
+
+x_train = np.delete(x_train, remove_list, 0)
+y_train = np.delete(y_train, remove_list, 0)
+
+
 num_classes = 3
 y_train = np_utils.to_categorical(y_train , num_classes)
+y_val = np_utils.to_categorical(y_val , num_classes)
 '''
 y_val = y_train[0:1000,:]
 y_train = y_train[1000:,:]
 '''
+print(x_train.shape)
+print(y_train.shape)
 
-x_train, x_val, y_train, y_val = train_test_split(x_train, y_train, test_size=0.33, random_state=7)
+#x_train, x_val, y_train, y_val = train_test_split(x_train, y_train, test_size=0.33, random_state=7)
 
 
 
-data_augmentation = True
+
+data_augmentation = False
+nb_classes = 3
 '''
 model = Sequential()
 
@@ -143,24 +173,20 @@ model.compile(loss='categorical_crossentropy', # using the cross-entropy loss fu
 
 
 '''
+'''
 model = Sequential()
-model.add(Conv2D(32, (3, 3), input_shape=(32, 32, 3), padding='same'))
-model.add(PReLU())
-model.add(Conv2D(32, (3, 3), padding='same'))
-model.add(PReLU())
+model.add(Conv2D(32, (3, 3), input_shape=(32, 32, 3), activation='relu', padding='same'))
+model.add(Conv2D(32, (3, 3), activation='relu', padding='same'))
 model.add(MaxPooling2D(pool_size=(2, 2)))
 model.add(Dropout(0.25))
 
-model.add(Conv2D(64, (3, 3), padding='same'))
-model.add(PReLU())
-model.add(Conv2D(64, (3, 3), padding='same'))
-model.add(PReLU())
+model.add(Conv2D(64, (3, 3), activation='relu', padding='same'))
+model.add(Conv2D(64, (3, 3), activation='relu', padding='same'))
 model.add(MaxPooling2D(pool_size=(2, 2)))
 model.add(Dropout(0.25))
 
 model.add(Flatten())
-model.add(Dense(512))
-model.add(PReLU())
+model.add(Dense(512, activation='relu'))
 model.add(Dropout(0.5))
 model.add(Dense(num_classes, activation='softmax'))
 
@@ -176,16 +202,69 @@ model.compile(loss='categorical_crossentropy',
               #optimizer=sgd,
               optimizer='adam',
               metrics=['accuracy'])
+'''
 
 '''
 x_train = x_train.astype('float32')
 x_val = x_val.astype('float32')
 x_train /= 255
 x_val /= 255'''
+epo = 50
+batch=64
+model = Sequential()
+'''
+#1
+model.add(Conv2D(32, 3, 3, activation='relu', input_shape=(32,32,3)))
+model.add(Conv2D(32, 3, 3, activation='relu'))
+model.add(MaxPooling2D(pool_size=(2, 2)))
+model.add(Dropout(0.25))
+# model.add(Conv2D(FEATURES_2, 2,2, activation='relu'))
+# model.add(MaxPooling2D(pool_size=(2, 2)))
+
+model.add(Conv2D(64, 3, 3, activation='relu'))
+model.add(MaxPooling2D(pool_size=(2, 2)))
+model.add(Dropout(0.25))
+model.add(Flatten())  # this converts our 3D feature maps to 1D feature vectors
+model.add(Dense(128))
+model.add(Activation('relu'))
+model.add(Dropout(0.5))
+model.add(Dense(3))
+model.add(Activation('softmax'))
+'''
+
+
+#2
+model.add(Convolution2D(32, 3, 3, border_mode='same', input_shape=(32, 32, 3)))
+model.add(PReLU)
+model.add(Convolution2D(32, 3, 3))
+model.add(PReLU)
+model.add(MaxPooling2D(pool_size=(2, 2)))
+model.add(Dropout(0.25))
+
+model.add(Convolution2D(64, 3, 3, border_mode='same'))
+model.add(PReLU)
+model.add(Convolution2D(64, 3, 3))
+model.add(PReLU)
+model.add(MaxPooling2D(pool_size=(2, 2)))
+model.add(Dropout(0.25))
+
+model.add(Flatten())
+model.add(Dense(512))
+model.add(Activation('relu'))
+model.add(Dropout(0.5))
+model.add(Dense(nb_classes))
+model.add(Activation('softmax'))
+
+# Compile model
+lrate = 0.01
+decay = lrate/epo
+sgd = SGD(lr=lrate, momentum=0.9, decay=1e-6, nesterov=False)
+model.compile(loss='categorical_crossentropy', optimizer=sgd, metrics=['accuracy'])
+
 
 if not data_augmentation:
     print('Not using data augmentation.')
-    model.fit(x_train, y_train,
+    res = model.fit(x_train, y_train,
               batch_size=batch,
               epochs=epo,
               validation_data=(x_val, y_val),
@@ -211,12 +290,11 @@ else:
                         validation_data=(x_val, y_val))
 
 
-print('time elapsed: {0}'.format(time.time() - st))
 y_test = model.predict_classes(x_test, verbose=0)
 print(y_test)
 y_test = np.array(y_test)
 
-with open('out_adam.csv','wb') as myfile:
+with open('out_1.csv','wb') as myfile:
     wr = csv.writer(myfile, quoting=csv.QUOTE_ALL)
     for val in y_test:
         wr.writerow([val])
