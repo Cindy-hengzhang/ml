@@ -1,18 +1,33 @@
+#@TODO: rewrite keras model somewhat from stratch
+# as per, piazza @2325
+
+# we must cite https://github.com/fchollet/keras/blob/master/examples/cifar10_cnn.py,
+# as this code seems to be originaly based off of it
+# but we need to remove references to http://parneetk.github.io/blog/cnn-cifar10/
+# as that violates the polity below
+
+'''
+    For computer vision task of homework 9, please consider the following as homework course policies:
+
+    1. You are NOT allowed to use any pre-trained neural network weights for solving the task.
+
+    2. You are only allowed to use standard examples of neural networks from Tensorflow/Keras/Caffe/Torch (from the original documentation repository). You are NOT allowed to use other private/public Github repository codes for the task.
+
+    3. If you choose to use one of the standard neural network examples from these frameworks, you have to try different modifications of the network, identify and analyze the impact of adding / modifying / deleting certain layers, tuning hyper-parameters, etc and report the results in the write-up. Using the model and the parameters as is and submitting only those results will not fetch full points.
+
+    4. If you choose to use one of the standard neural network examples from these frameworks, you have to CITE the code repository in the write-up, indicating how you used the code. Any public code used without citation in the write-up will be considered plagiarism.
+'''
+
+import csv, time
 import numpy as np
-import scipy
 import scipy.io as sio
-import keras
-from keras.models import Model
-from keras.models import Sequential
-from keras.layers import Dense, Dropout, Flatten
-from keras.layers import Input, Convolution2D,Conv2D, MaxPooling2D, ZeroPadding2D, Activation
+#from scipy.io import loadmat
 import matplotlib.pyplot as plt
-import time
-from keras import optimizers
+from keras.models import Sequential
+from keras.layers import Dense, Activation, Dropout, Flatten
+from keras.layers import Conv2D, MaxPooling2D, ZeroPadding2D
 from keras.optimizers import SGD
-from keras import optimizers
 from keras.preprocessing.image import ImageDataGenerator
-import csv
 from keras.constraints import maxnorm
 from keras.utils import np_utils
 
@@ -77,12 +92,12 @@ for train_idx in range(12000):
         label = val_idx/500
     if label >= 3:
         break
-    if y_train[train_idx] == label: 
+    if y_train[train_idx] == label:
         x_val[val_idx] = x_train[train_idx]
         y_val[val_idx] = y_train[train_idx]
         remove_list.append(train_idx)
         val_idx += 1
-print(len(remove_list))          
+print(len(remove_list))
 
 x_train = np.delete(x_train, remove_list, 0)
 y_train = np.delete(y_train, remove_list, 0)
@@ -100,7 +115,7 @@ print(y_train.shape)
 
 #x_train, x_val, y_train, y_val = train_test_split(x_train, y_train, test_size=0.33, random_state=7)
 
- 
+
 
 
 data_augmentation = False
@@ -149,13 +164,13 @@ hidden_size = 512 # the FC layer will have 512 neurons
 
 num_train, height, width, depth = x_train.shape
 inp = Input(shape=(height, width, depth))
-conv_1 = Convolution2D(conv_depth_1, (kernel_size, kernel_size), padding='same', activation='relu')(inp)
-conv_2 = Convolution2D(conv_depth_1, (kernel_size, kernel_size), padding='same', activation='relu')(conv_1)
+conv_1 = Conv2D(conv_depth_1, (kernel_size, kernel_size), padding='same', activation='relu')(inp)
+conv_2 = Conv2D(conv_depth_1, (kernel_size, kernel_size), padding='same', activation='relu')(conv_1)
 pool_1 = MaxPooling2D(pool_size=(pool_size, pool_size))(conv_2)
 drop_1 = Dropout(drop_prob_1)(pool_1)
 # Conv [64] -> Conv [64] -> Pool (with dropout on the pooling layer)
-conv_3 = Convolution2D(conv_depth_2, (kernel_size, kernel_size), padding='same', activation='relu')(drop_1)
-conv_4 = Convolution2D(conv_depth_2, (kernel_size, kernel_size), padding='same', activation='relu')(conv_3)
+conv_3 = Conv2D(conv_depth_2, (kernel_size, kernel_size), padding='same', activation='relu')(drop_1)
+conv_4 = Conv2D(conv_depth_2, (kernel_size, kernel_size), padding='same', activation='relu')(conv_3)
 pool_2 = MaxPooling2D(pool_size=(pool_size, pool_size))(conv_4)
 drop_2 = Dropout(drop_prob_1)(pool_2)
 # Now flatten to 1D, apply FC -> ReLU (with dropout) -> softmax
@@ -233,16 +248,16 @@ model.add(Activation('softmax'))
 
 
 #2
-model.add(Convolution2D(32, 3, 3, border_mode='same', input_shape=(32, 32, 3)))
+model.add(Conv2D(32, (3, 3), padding='same', input_shape=(32, 32, 3)))
 model.add(Activation('relu'))
-model.add(Convolution2D(32, 3, 3))
+model.add(Conv2D(32, (3, 3)))
 model.add(Activation('relu'))
 model.add(MaxPooling2D(pool_size=(2, 2)))
 model.add(Dropout(0.25))
 
-model.add(Convolution2D(64, 3, 3, border_mode='same'))
+model.add(Conv2D(64, (3, 3), padding='same'))
 model.add(Activation('relu'))
-model.add(Convolution2D(64, 3, 3))
+model.add(Conv2D(64, (3, 3)))
 model.add(Activation('relu'))
 model.add(MaxPooling2D(pool_size=(2, 2)))
 model.add(Dropout(0.25))
@@ -276,7 +291,7 @@ else:
     datagen = ImageDataGenerator(
         shear_range=0.2,
         zoom_range=0.2,
-        horizontal_flip=True) 
+        horizontal_flip=True)
     # Compute quantities required for feature-wise normalization
     # (std, mean, and principal components if ZCA whitening is applied).
     datagen.fit(x_train)
