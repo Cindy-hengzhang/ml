@@ -92,4 +92,4 @@ activation_12 (Activation)   (None, 3)                 0
 Total params: 17,272,899
 Trainable params: 17,272,899
 Non-trainable params: 0
-_________________________
+_________________________________________________________________
