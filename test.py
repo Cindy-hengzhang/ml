@@ -269,6 +269,9 @@ model.add(Dropout(0.5))
 model.add(Dense(nb_classes))
 model.add(Activation('softmax'))
 
+from keras.utils.layer_utils import print_summary
+print_summary(model)
+
 # Compile model
 lrate = 0.01
 decay = lrate/epo
