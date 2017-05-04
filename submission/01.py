@@ -12,6 +12,7 @@ dataset = dataset_utils.get_dataset(filetype='.mat')
 
 num_classes = 3
 
+# based on: https://github.com/fchollet/keras/blob/master/examples/cifar10_cnn.py
 model = Sequential()
 
 model.add(Conv2D(32, (3, 3), padding='same', input_shape=(32, 32, 3)))
